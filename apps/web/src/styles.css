@@ -1,0 +1,26 @@
+:root { font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #172032; background: #f6f7fb; font-synthesis: none; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+main { width: min(920px, 100%); margin: 0 auto; padding: 28px 24px 44px; }
+header, .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+header { border-bottom: 1px solid #e2e6ef; padding-bottom: 22px; }
+.brand { font-weight: 800; letter-spacing: .12em; font-size: 14px; }
+.badge { background: #e8edff; color: #3757bf; padding: 6px 12px; border-radius: 100px; font-size: 12px; }
+.intro { padding: 48px 0 28px; }
+.eyebrow { color: #59687d; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; }
+h1 { font-size: clamp(30px, 5vw, 48px); line-height: 1.13; letter-spacing: -.04em; margin: 16px 0 20px; }
+h2 { font-size: 18px; margin: 0; }
+.lead { font-size: 17px; line-height: 1.65; max-width: 660px; color: #566377; }
+.card { background: #fff; border: 1px solid #e3e7ef; border-radius: 18px; padding: 24px; }
+.status-list { list-style: none; padding: 0; margin: 16px 0 0; }
+.status-list li { display: flex; justify-content: space-between; gap: 16px; align-items: center; padding: 16px 0; border-top: 1px solid #eef0f5; }
+.status { font-size: 13px; text-align: right; }
+.ready { color: #176b4b; }
+.unavailable { color: #b83737; }
+.not_implemented { color: #65718a; }
+.areas { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 20px 0; }
+.areas p, footer { color: #65718a; line-height: 1.6; font-size: 14px; }
+.number { display: block; color: #5d75d5; font-size: 12px; font-weight: 700; margin-bottom: 14px; }
+footer { padding-top: 16px; }
+@media (max-width: 560px) { main { padding: 20px 16px 32px; } .intro { padding-top: 28px; } .areas { grid-template-columns: 1fr; } .card { padding: 20px; } }
+

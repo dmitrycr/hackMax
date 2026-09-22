@@ -1,0 +1,48 @@
+name: checks
+on: [push, pull_request]
+permissions:
+  contents: read
+
+jobs:
+  go:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: services/backend/go.mod
+          cache-dependency-path: services/backend/go.sum
+      - run: go test -race ./...
+        working-directory: services/backend
+      - run: go vet ./...
+        working-directory: services/backend
+      - run: go build ./cmd/...
+        working-directory: services/backend
+
+  python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install uv==0.11.6
+      - run: uv sync --frozen
+        working-directory: services/document-processor
+      - run: uv run ruff check . && uv run pytest
+        working-directory: services/document-processor
+      - run: make generate-contracts && git diff --exit-code -- contracts
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci && npm run build
+        working-directory: apps/web
+      - run: docker compose --env-file .env.example config --quiet
+
