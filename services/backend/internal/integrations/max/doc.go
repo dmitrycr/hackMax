@@ -1,4 +1,3 @@
-// Package max reserves the boundary for the official MAX Go SDK, webhook
-// verification and server-side validation of mini-app launch parameters.
-// Authentication is not implemented; no user/document routes are exposed yet.
+// Package max implements the MAX text echo bot using the official Go SDK.
+// Mini-app authentication and document processing are not implemented here yet.
 package max

@@ -5,6 +5,8 @@ go 1.25.0
 require (
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/jackc/pgx/v5 v5.7.6
+	github.com/joho/godotenv v1.5.1
+	github.com/max-messenger/max-bot-api-client-go v1.7.1
 	github.com/pressly/goose/v3 v3.24.3
 	github.com/riverqueue/river v0.26.0
 	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.26.0

@@ -1,7 +1,16 @@
-.PHONY: setup up down logs check test test-go test-python build-web probe generate-contracts sqlc
+.PHONY: setup up down logs check test test-go test-python build-web probe probe-llm eval-llm generate-contracts sqlc bot bot-local bot-stop
 
 setup:
 	python3 scripts/init_env.py
+
+bot: setup
+	docker compose --profile bot up --build -d bot
+
+bot-local: setup
+	cd services/backend && go run ./cmd/bot -env-file ../../.env
+
+bot-stop:
+	docker compose --profile bot stop bot
 
 up: setup
 	docker compose up --build -d --wait
@@ -29,9 +38,14 @@ build-web:
 probe:
 	docker compose exec worker /app/probe
 
+probe-llm:
+	docker compose exec worker /app/probe -llm
+
+eval-llm:
+	cd services/backend && go run ./cmd/eval-llm -env-file ../../.env
+
 generate-contracts:
 	cd services/document-processor && uv run python ../../scripts/export_contracts.py
 
 sqlc:
 	cd services/backend && go run github.com/sqlc-dev/sqlc/cmd/sqlc@v1.29.0 generate
-

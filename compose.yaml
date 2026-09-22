@@ -13,6 +13,18 @@ x-backend: &backend
   networks: [internal]
 
 services:
+  bot:
+    build:
+      context: .
+      dockerfile: services/backend/Dockerfile
+    profiles: [bot]
+    command: [/app/bot]
+    environment:
+      MAX_BOT_TOKEN: ${MAX_BOT_TOKEN:-}
+      MAX_INSECURE_SKIP_VERIFY: ${MAX_INSECURE_SKIP_VERIFY:-false}
+    networks: [max-egress]
+    restart: 'no'
+
   postgres:
     image: postgres:17.6-alpine
     environment:
@@ -52,6 +64,13 @@ services:
   worker:
     <<: *backend
     command: [/app/worker]
+    environment:
+      <<: *backend-env
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-openrouter/free}
+      OPENROUTER_TIMEOUT: ${OPENROUTER_TIMEOUT:-180s}
+      OPENROUTER_MAX_TOKENS: ${OPENROUTER_MAX_TOKENS:-8000}
+    networks: [internal, llm-egress]
     volumes: [documents:/data/files]
     depends_on:
       migrate: {condition: service_completed_successfully}
@@ -95,6 +114,8 @@ networks:
   internal:
     internal: true
   public:
+  llm-egress:
+  max-egress:
 
 volumes:
   postgres-data:

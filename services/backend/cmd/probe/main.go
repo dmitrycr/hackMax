@@ -3,11 +3,14 @@ package main
 
 import (
 	"context"
+	"errors"
+	"flag"
 	"fmt"
 	"github.com/jackc/pgx/v5"
 	"github.com/riverqueue/river"
 	"github.com/riverqueue/river/riverdriver/riverpgxv5"
 	"hackmax/backend/internal/config"
+	"hackmax/backend/internal/integrations/llm"
 	"hackmax/backend/internal/jobs"
 	"hackmax/backend/internal/platform/postgres"
 	"os"
@@ -21,11 +24,30 @@ func main() {
 	}
 }
 func run() error {
+	useLLM := flag.Bool("llm", false, "send a synthetic structured request to OpenRouter via River")
+	flag.Parse()
+	var args river.JobArgs = jobs.ProcessorProbeArgs{}
+	label := "Python"
+	waitTimeout := 90 * time.Second
+	if *useLLM {
+		if os.Getenv("OPENROUTER_API_KEY") == "" {
+			return llm.ErrDisabled
+		}
+		limits, err := llm.LimitsFromEnv()
+		if err != nil {
+			return err
+		}
+		if _, err := llm.NewWithLimits(os.Getenv("OPENROUTER_API_KEY"), os.Getenv("OPENROUTER_MODEL"), limits); err != nil {
+			return err
+		}
+		waitTimeout = limits.Timeout + time.Minute
+		args, label = jobs.LLMProbeArgs{}, "OpenRouter (schema and references validated)"
+	}
 	cfg, err := config.Load()
 	if err != nil {
 		return err
 	}
-	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), waitTimeout)
 	defer cancel()
 	pool, err := postgres.Open(ctx, cfg.DatabaseURL)
 	if err != nil {
@@ -36,7 +58,7 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	result, err := client.Insert(ctx, jobs.ProcessorProbeArgs{}, &river.InsertOpts{MaxAttempts: 1})
+	result, err := client.Insert(ctx, args, &river.InsertOpts{MaxAttempts: 1})
 	if err != nil {
 		return err
 	}
@@ -46,7 +68,7 @@ func run() error {
 			return err
 		}
 		if state == "completed" {
-			fmt.Printf("River → Go worker → Python: OK (job %d)\n", result.Job.ID)
+			fmt.Printf("River → Go worker → %s: OK (job %d)\n", label, result.Job.ID)
 			return nil
 		}
 		if state == "discarded" || state == "cancelled" {
@@ -54,7 +76,7 @@ func run() error {
 		}
 		select {
 		case <-ctx.Done():
-			return ctx.Err()
+			return errors.New("probe wait timed out; the queued job may still run, check worker logs before retrying")
 		case <-time.After(250 * time.Millisecond):
 		}
 	}
